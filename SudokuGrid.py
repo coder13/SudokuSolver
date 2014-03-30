@@ -1,5 +1,7 @@
 from math import floor
 
+# At its current state it will only validate puzzles.
+
 class SudokuGrid:
     def __init__(self,g=[0]*81):
         self.grid = g
