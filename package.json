@@ -1,0 +1,13 @@
+{
+	"name": "SudokuSolver", 
+	"version": "0.0.1", 
+	"scripts": {
+		"start": "node SudokuSolver.js"
+	}, 
+	"dependencies": {
+		"hapi": "2.6.0",
+		"jade": ""
+	}
+
+
+}
