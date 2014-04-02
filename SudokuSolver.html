@@ -1,0 +1,146 @@
+<html>
+<head>
+  <title>Sodoku Solver</title>
+  <script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
+  <script type="text/javascript">
+
+    // Initialize some state
+    var myApp = {};
+
+    myApp.data = [[],[],[],[],[],[],[],[],[]];
+
+    //Wait till the page is loaded to mess with the html
+    document.addEventListener('DOMContentLoaded', function() {
+      var gameDiv = document.getElementById("game");
+      gameDiv.innerHTML = '';
+      
+      for (var i = 0; i < 9; i++) {
+        var box = document.createElement("div");
+        box.className = "box box" + i;
+      
+        for (var n = 0; n < 9; n++) {
+          var input = document.createElement("input");
+          var column = ((i % 3 * 3) + (n % 3));
+          var row = ((Math.floor(n / 3)) + (Math.floor(i / 3) * 3));
+
+          input.type = "text";
+          input.value = (myApp.data[i][n]? myApp.data[i][n]: '');
+          input.maxLength = 1;
+          input.id = "inp" + column + "x" + row;
+          input.className = "col" + column;
+          input.className += " row" + row;
+          input.className += " box" + i;
+          input.addEventListener("change", puzzleChanged);
+          box.appendChild(input);
+        };
+
+        gameDiv.appendChild(box);
+      };
+    });
+
+    function puzzleChanged (event) {
+      console.log(event);
+      var myCoords = event.srcElement.id.replace("inp","").split("x");
+      // console.log(myCoords);
+      var v = parseInt(event.srcElement.value);
+      if (v) {
+        myApp.data[myCoords[0]][myCoords[1]] = v;
+        console.log(myApp.data[myCoords[0]][myCoords[1]]);
+      } else {
+        event.srcElement.value = "";
+      };
+    }
+
+    function validatePuzzle () {
+      console.log(event);
+       
+      var isValid = true;
+
+      var grandTotal = 0;
+      for (var i = 0; i < 9; i++) {
+        var iTotal = 0; 
+        for (var j = 0; j < 9; j++) {
+          if (myApp.data[i][j])
+            iTotal += myApp.data[i][j];
+          
+        }
+        if (iTotal != 45) {
+          isValid = false
+          
+        }
+        grandTotal += iTotal;
+      }
+      if (grandTotal != 405)
+        isValid = false;
+
+      document.getElementById('valid').innerHTML = (isValid? 'Valid!' : 'Not Valid!');
+    }
+
+    function solvePuzzle () {
+      alert('not implemented')
+    }
+
+  </script>
+
+  <style type="text/css">
+    div.game {
+      margin-left: 2px;
+      width: 252px; /*228px*/
+      text-align: center;
+      float: left;
+    }
+    
+    div.box {
+      width: 74px; /*74px*/
+      border: 5px solid white;
+      text-align: center;
+      float: left;
+    }
+
+    div.box input {
+      width: 20px;
+      margin: 2px;
+      text-align: center;
+      float: left;
+    }
+
+    div.interactive {
+      margin-left: 20px;
+      float: left;
+      display: inline;
+    }
+
+    #validateButton #solveButton {
+    }
+
+    #valid {
+      display: inline;
+      margin-left: 10px;
+    }
+
+  </style>
+
+</head>
+<body>
+
+<!--
+<div class="">
+  <h2>Interesting Links:</h2>
+  <a href="http://youmightnotneedjquery.com/">http://youmightnotneedjquery.com/</a><br>
+  <a href="http://underscorejs.org/">http://underscorejs.org/</a><br>
+</div>
+-->
+
+  <h2>The Game:</h2>
+  
+  <div id="interactive">
+    <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
+    <button id="validateButton" onClick="validatePuzzle();">Validate</button>
+    <p id="valid"></p>
+  </div>
+
+  <br>
+  <div id="game" class="game"></div>
+
+</body>
+</html>
