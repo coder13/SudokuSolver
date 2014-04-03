@@ -9,6 +9,7 @@
 
     myApp.data = [[],[],[],[],[],[],[],[],[]];
 
+
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
       var gameDiv = document.getElementById("game");
@@ -51,27 +52,48 @@
       };
     }
 
+    function validateRow(y) {
+      var total = 0;
+      for (var x = 0; x < 9; x++) {
+        if (myApp.data[y][x]){
+          total += myApp.data[y][x];
+        }
+      }
+      
+     return total == 45;
+    }
+
+    function validateColumn(x) {
+      var total = 0;
+      for (var y = 0; y < 9; y++) {
+        if (myApp.data[y][x]){
+          total += myApp.data[y][x];
+        }
+      }
+      return total == 45;
+    }
+
+    function checkBox(i) {
+      var total = 0;
+      for (var j = 0; j < 9; j++) {
+        var x = (i%3)*3 + j%3;
+        var y = Math.floor(i/3)*3 + Math.floor(j/3);
+        if (myApp.data[y][x]){
+          total += myApp.data[y][x];
+        }
+      }
+      return total == 45;
+    }
+
     function validatePuzzle () {
-      console.log(event);
-       
       var isValid = true;
 
-      var grandTotal = 0;
       for (var i = 0; i < 9; i++) {
-        var iTotal = 0; 
-        for (var j = 0; j < 9; j++) {
-          if (myApp.data[i][j])
-            iTotal += myApp.data[i][j];
-          
+        if (!validateRow(i) || !validateColumn(i) || !checkBox(i)) {
+          isValid = false;
         }
-        if (iTotal != 45) {
-          isValid = false
-          
-        }
-        grandTotal += iTotal;
+
       }
-      if (grandTotal != 405)
-        isValid = false;
 
       document.getElementById('valid').innerHTML = (isValid? 'Valid!' : 'Not Valid!');
     }
@@ -86,12 +108,14 @@
     div.game {
       margin-left: 2px;
       width: 252px; /*228px*/
+      height: 256px;
       text-align: center;
       float: left;
+      clear: both;
     }
     
     div.box {
-      width: 74px; /*74px*/
+      width: 66px; /*74px*/
       border: 5px solid white;
       text-align: center;
       float: left;
@@ -99,18 +123,17 @@
 
     div.box input {
       width: 20px;
-      margin: 2px;
+      margin: 1px;
+      border: 1px solid black;
       text-align: center;
       float: left;
     }
 
     div.interactive {
-      margin-left: 20px;
+      margin-left: 6px;
       float: left;
+      width: 100%;
       display: inline;
-    }
-
-    #validateButton #solveButton {
     }
 
     #valid {
@@ -133,7 +156,7 @@
 
   <h2>The Game:</h2>
   
-  <div id="interactive">
+  <div id="interactive" class="interactive">
     <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
     <button id="validateButton" onClick="validatePuzzle();">Validate</button>
     <p id="valid"></p>
@@ -141,6 +164,22 @@
 
   <br>
   <div id="game" class="game"></div>
-
+  
+  <div style="font-size:14px">
+    <h4 style="margin: 0px; margin-top:10px">Example:</h4>
+    <p>
+      123  789  456<br>
+      789  456  123<br>
+      456  123  789<br>
+      <br>
+      231  897  564<br>
+      564  231  897<br>
+      897  564  231<br>
+      <br>
+      312  978  645<br>
+      645  312  978<br>
+      978  645  312<br>
+    </p>
+  </div>
 </body>
 </html>
