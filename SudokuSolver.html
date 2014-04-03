@@ -1,7 +1,7 @@
 <html>
 <head>
 
-  <!-- pastebin.com/pJq0GJBk
+  <!-- pastebin.com/pJq0GJBk -->
   
   <title>Sodoku Solver</title>
   <script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
@@ -10,8 +10,12 @@
     // Initialize some state
     var myApp = {};
 
-    myApp.data = [[],[],[],[],[],[],[],[],[]];
+    myApp.data = [];
+    for (var i = 0; i < 81; i++) {
+      myApp.data[i] = [0, []];
+    }
 
+    randomFill();
 
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
@@ -28,9 +32,10 @@
           var row = ((Math.floor(n / 3)) + (Math.floor(i / 3) * 3));
 
           input.type = "text";
-          input.value = (myApp.data[i][n]? myApp.data[i][n]: '');
+          input.value = (myApp.data[i*9+n][0]? myApp.data[i*9+n][0]: '');
+          input.title = myApp.data[i*9+n][1].toString();
           input.maxLength = 1;
-          input.id = "inp" + column + "x" + row;
+          input.id = "inp" + (i*9+n);
           input.className = "col" + column;
           input.className += " row" + row;
           input.className += " box" + i;
@@ -53,53 +58,70 @@
       } else {
         event.srcElement.value = "";
       };
+
+      updateDisplay();
     }
 
-    function validateRow(y) {
-      var total = 0;
-      for (var x = 0; x < 9; x++) {
-        if (myApp.data[y][x]){
-          total += myApp.data[y][x];
+
+    function isValid(x, y, n) {
+      for (var i = 0; i < 9; i++) {
+        
+        console.log((y*9 + i) + '    ' + (x+i*9));
+        if (myApp.data[ + i][0] == n || myApp.data[x + i*9][0] == n) {
+          return false;
         }
+        
       }
-      
-     return total == 45;
+
+      return true;
     }
 
-    function validateColumn(x) {
-      var total = 0;
-      for (var y = 0; y < 9; y++) {
-        if (myApp.data[y][x]){
-          total += myApp.data[y][x];
+    function genPossibilities () {
+      for (var i = 0; i < 81; i++) {
+        if (myApp.data[i][0] != 0)
+          continue;
+        myApp.data[i][1] = [];
+        for (var n = 1; n <= 9; n++) {
+          if (isValid(i%9, Math.floor(i/9)*9), n)
+            myApp.data[i][1].push(n);
+          
         }
-      }
-      return total == 45;
-    }
 
-    function checkBox(i) {
-      var total = 0;
-      for (var j = 0; j < 9; j++) {
-        var x = (i%3)*3 + j%3;
-        var y = Math.floor(i/3)*3 + Math.floor(j/3);
-        if (myApp.data[y][x]){
-          total += myApp.data[y][x];
-        }
       }
-      return total == 45;
     }
 
     function validatePuzzle () {
-      var isValid = true;
+      var isValid = false;
 
       for (var i = 0; i < 9; i++) {
-        if (!validateRow(i) || !validateColumn(i) || !checkBox(i)) {
-          isValid = false;
-        }
-
+        
       }
 
-      document.getElementById('valid').innerHTML = (isValid? 'Valid!' : 'Not Valid!');
+      genPossibilities()
+      document.getElementById('info').innerHTML = (isValid? 'Works!' : 'Does not work!');
     }
+
+    function randomFill () {
+      for (var i = 0; i < 81; i++) {
+        if (Math.random() < .2) {
+          myApp.data[i][0] = Math.floor(10*Math.random());
+        } else {
+          myApp.data[i][0] = 0;
+
+        };
+      };
+      genPossibilities();
+      updateDisplay();
+    }
+
+    function updateDisplay () {
+      for (var i = 0; i < 81; i++) {
+        var myInp = document.getElementById("inp" + i);
+        myInp.value = (myApp.data[i][0]? myApp.data[i][0] : '');
+        myInp.title = myApp.data[i][1].toString();
+      };
+    }
+
 
     function solvePuzzle () {
       alert('not implemented')
@@ -132,14 +154,14 @@
       float: left;
     }
 
-    div.interactive {
+    div.controls {
       margin-left: 6px;
       float: left;
       width: 100%;
       display: inline;
     }
 
-    #valid {
+    #info {
       display: inline;
       margin-left: 10px;
     }
@@ -159,10 +181,11 @@
 
   <h2>The Game:</h2>
   
-  <div id="interactive" class="interactive">
+  <div id="controls" class="controls">
     <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
     <button id="validateButton" onClick="validatePuzzle();">Validate</button>
-    <p id="valid"></p>
+    <button id="generateButton" onClick="randomFill();">generate</button>
+    <p id="info"></p>
   </div>
 
   <br>
