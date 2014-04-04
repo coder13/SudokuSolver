@@ -66,8 +66,8 @@
     function isValid(x, y, n) {
       for (var i = 0; i < 9; i++) {
         
-        console.log((y*9 + i) + '    ' + (x+i*9));
-        if (myApp.data[ + i][0] == n || myApp.data[x + i*9][0] == n) {
+        // console.log(x + ', ' + y + ', ' + i + ': ' + (y*9 + i) + '    ' + (x+i*9));
+        if (myApp.data[y*9 + i][0] == n || myApp.data[x + i*9][0] == n) {
           return false;
         }
         
@@ -82,7 +82,7 @@
           continue;
         myApp.data[i][1] = [];
         for (var n = 1; n <= 9; n++) {
-          if (isValid(i%9, Math.floor(i/9)*9), n)
+          if (isValid(i%9, Math.floor(i/9)), n)
             myApp.data[i][1].push(n);
           
         }
