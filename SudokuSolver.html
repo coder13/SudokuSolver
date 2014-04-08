@@ -11,11 +11,15 @@
     var myApp = {};
 
     myApp.data = [];
-    for (var i = 0; i < 81; i++) {
-      myApp.data[i] = [0, []];
-    }
-
     randomFill();
+
+    var h = 56;
+    for (var i = 0; i < 9; i++) {
+      var a = Math.floor(h/27)*27 + Math.floor(i/3)*9  +  Math.floor((h%9)/3)*3 + (i%3);
+
+      console.log(a, myApp.data[a][0], isValid(h, 1));
+      // console.log(i+1, isValid(h, i+1));
+    }
 
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
@@ -30,12 +34,13 @@
           var input = document.createElement("input");
           var column = ((i % 3 * 3) + (n % 3));
           var row = ((Math.floor(n / 3)) + (Math.floor(i / 3) * 3));
+          var index = row*9 + column;
 
           input.type = "text";
-          input.value = (myApp.data[i*9+n][0]? myApp.data[i*9+n][0]: '');
-          input.title = myApp.data[i*9+n][1].toString();
+          input.value = (myApp.data[index][0]? myApp.data[index][0]: '');
+          input.title = "inp" + index;
           input.maxLength = 1;
-          input.id = "inp" + (i*9+n);
+          input.id = "inp" + index;
           input.className = "col" + column;
           input.className += " row" + row;
           input.className += " box" + i;
@@ -48,33 +53,31 @@
     });
 
     function puzzleChanged (event) {
-      console.log(event);
-      var myCoords = event.srcElement.id.replace("inp","").split("x");
-      // console.log(myCoords);
+      // console.log(event);
+      var index = parseInt(event.srcElement.id.replace("inp",""));
       var v = parseInt(event.srcElement.value);
+      
+      console.log(index + "\t" + v);
       if (v) {
-        myApp.data[myCoords[0]][myCoords[1]] = v;
-        console.log(myApp.data[myCoords[0]][myCoords[1]]);
+        myApp.data[index] = [v, []];
       } else {
         event.srcElement.value = "";
       };
 
+      genPossibilities();
       updateDisplay();
     }
 
-
-    function isValid(x, y, n) {
+    function isValid(index, n) {
       for (var i = 0; i < 9; i++) {
-        
-        // console.log(x + ', ' + y + ', ' + i + ': ' + (y*9 + i) + '    ' + (x+i*9));
-        if (myApp.data[y*9 + i][0] == n || myApp.data[x + i*9][0] == n) {
+        if (myApp.data[Math.floor(index/9)*9 + i][0] == n || myApp.data[(index%9) + i*9][0] == n || // Row & Column
+            myApp.data[Math.floor(index/27)*27 + Math.floor(i/3)*9  +  Math.floor((index%9)/3)*3 + (i%3)][0] == n) {       // Block 
           return false;
-        }
-        
+        } 
       }
-
       return true;
     }
+
 
     function genPossibilities () {
       for (var i = 0; i < 81; i++) {
@@ -82,10 +85,12 @@
           continue;
         myApp.data[i][1] = [];
         for (var n = 1; n <= 9; n++) {
-          if (isValid(i%9, Math.floor(i/9)), n)
+          if (isValid(i, n)) {
             myApp.data[i][1].push(n);
+          }
           
         }
+        console.log(i + " - " + myApp.data[i][1]);
 
       }
     }
@@ -97,14 +102,22 @@
         
       }
 
-      genPossibilities()
       document.getElementById('info').innerHTML = (isValid? 'Works!' : 'Does not work!');
     }
 
-    function randomFill () {
+    function reset() {
       for (var i = 0; i < 81; i++) {
-        if (Math.random() < .2) {
-          myApp.data[i][0] = Math.floor(10*Math.random());
+        myApp.data[i] = [0, []];
+      }
+      updateDisplay();
+    }
+
+    function randomFill () {
+      reset();
+      for (var i = 0; i < 81; i++) {
+        if (Math.random() < .25) {
+          var r = Math.floor(Math.random()*10);
+          myApp.data[i][0] = (isValid(i, r) ? r : 0);
         } else {
           myApp.data[i][0] = 0;
 
@@ -115,10 +128,13 @@
     }
 
     function updateDisplay () {
+      console.log('--');
       for (var i = 0; i < 81; i++) {
         var myInp = document.getElementById("inp" + i);
-        myInp.value = (myApp.data[i][0]? myApp.data[i][0] : '');
-        myInp.title = myApp.data[i][1].toString();
+        if (myInp) {
+          myInp.value = (myApp.data[i][0]? myApp.data[i][0] : '');
+          // myInp.title = (myApp.data[i][1]? myApp.data[i][1].toString() : "");
+        }
       };
     }
 
@@ -164,7 +180,7 @@
     #info {
       display: inline;
       margin-left: 10px;
-    }
+    }s
 
   </style>
 
