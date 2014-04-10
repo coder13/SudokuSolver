@@ -10,9 +10,22 @@
     // Initialize some state
     var myApp = {};
 
-    myApp.data = [];
-    randomFill();
+    myApp.data = [[0,[]], [0,[]], [6,[]],   [0,[]], [0,[]], [0,[]],   [4,[]], [3,[]], [9,[]], 
+                  [0,[]], [8,[]], [0,[]],   [0,[]], [0,[]], [1,[]],   [7,[]], [2,[]], [0,[]], 
+                  [3,[]], [4,[]], [7,[]],   [2,[]], [0,[]], [0,[]],   [0,[]], [0,[]], [8,[]], 
+                   
+                  [0,[]], [3,[]], [0,[]],   [0,[]], [0,[]], [0,[]],   [0,[]], [0,[]], [0,[]], 
+                  [0,[]], [1,[]], [2,[]],   [8,[]], [4,[]], [3,[]],   [6,[]], [9,[]], [0,[]], 
+                  [0,[]], [0,[]], [0,[]],   [0,[]], [0,[]], [0,[]],   [0,[]], [8,[]], [0,[]], 
 
+                  [4,[]], [0,[]], [0,[]],   [0,[]], [0,[]], [7,[]],   [9,[]], [1,[]], [2,[]], 
+                  [0,[]], [9,[]], [3,[]],   [6,[]], [0,[]], [0,[]],   [0,[]], [7,[]], [0,[]], 
+                  [5,[]], [7,[]], [1,[]],   [0,[]], [0,[]], [0,[]],   [8,[]], [0,[]], [0,[]]];
+
+                  genPossibilities();
+                  updateDisplay();
+    // randomFill();
+    
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
       var gameDiv = document.getElementById("game");
@@ -44,15 +57,42 @@
       };
     });
 
+
+    function getRow(y) {
+      var row = [];
+      for (var x = 0; x < 9; x++) {
+        row.push(myApp.data[y*9+x]);
+      }
+      return row;
+    }
+
+    function getColumn(x) {
+      var column = [];
+      for (var y = 0; y < 9; y++) {
+        column.push(myApp.data[y*9+x]);
+      } 
+      return column;
+    }
+
+    function getBlock(i) {
+      var block = [];
+      for (var j = 0; j < 0; j++) {
+        block.push(myApp.data[Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3)][0]);
+      }
+      return block;
+    }
+
+
     function puzzleChanged (event) {
       // console.log(event);
       var index = parseInt(event.srcElement.id.replace("inp",""));
       var v = parseInt(event.srcElement.value);
+      console.log(v);
       
       if (v) {
         myApp.data[index] = [v, []];
       } else {
-        event.srcElement.value = "";
+        myApp.data[index] = [0, []];
       };
 
       genPossibilities();
@@ -78,6 +118,7 @@
         for (var n = 1; n <= 9; n++) {
           if (isValid(i, n)) {
             myApp.data[i][1].push(n);
+
           }
           
         }
@@ -85,21 +126,52 @@
       }
     }
 
+    function hasDuplicates (array) {
+      return (array.length != _.uniq(array).length);
+    }
 
+    var messages = ['Works!', 'Incomplete', 'Invalid', ''];
+    
     function validatePuzzle () {
       // Determines if the puzzle works. All 9 numbers are used 9 times and no two number are in the same row, column or box
 
-      var isValid = true;
+      var isValid = 0;
 
-      var nums = [0,0,0,0,0,0,0,0,0];
+      // Checks if a cell has 0 possibilities
       for (var i = 0; i < 81; i++) {
-        nums[myApp.data[i][0]-1] += 1;
-      }
-      for (var i = 0; i < 9; i++) {
-        if (nums[i] != 9)
-          isValid = false;
+        if (myApp.data[i][0] == 0 && myApp.data[i][1] == 0) {
+          document.getElementById('info').innerHTML = 'A cell has zero genPossibilities';
+          return 2;
+        }
       }
 
+      // Checks if all 9 numbers have been used
+      var nums = [0,0,0,0,0,0,0,0,0];
+      for (var i = 0; i < 81; i++)
+        nums[myApp.data[i][0]-1] += 1;
+        
+      for (var i = 0; i < 9; i++) {
+        if (nums[i] < 9) {
+          document.getElementById('info').innerHTML = messages[1];
+          return 1;
+        } else if (nums[i] > 9) {
+          document.getElementById('info').innerHTML = "A number has been used too many times!";
+          return 2;
+        }
+
+        if (hasDuplicates(getRow(i)) || hasDuplicates(getColumn(i)) || hasDuplicates(getBlock(i))) {
+          document.getElementById('info').innerHTML = 'Has duplicates!';
+          return 2;
+        }
+      }
+
+      if (_.compact(myApp.data) != 81) {
+        document.getElementById('info').innerHTML = messages[1];
+        return 1;
+      }
+
+
+      // Checks if they are all in the correct place
       var gTotal = 0;
       for (var i = 0; i < 9; i++) {
         var rTotal = 0, cTotal = 0, bTotal = 0;
@@ -111,15 +183,17 @@
           cTotal += myApp.data[i + j*9][0]; 
           bTotal += myApp.data[Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3)][0];
         }
-        if (rTotal != 45 || cTotal != 45 || bTotal != 45) {// 45 = sum([1,2,3,4,5,6,7,8,9])
-          isValid = false;
+        if (rTotal != 45 || cTotal != 45 || bTotal != 45) { // 45 = sum([1,2,3,4,5,6,7,8,9])
+          document.getElementById('info').innerHTML = messages[2];
+          return 2;
         }
 
       }
       if (gTotal != 405) // 405 = 45*9 
-        isValid = false;
-      
-      document.getElementById('info').innerHTML = (isValid? 'Works!' : 'Does not work!');
+        isValid = 2;
+        
+      document.getElementById('info').innerHTML = messages[isValid];
+      return isValid;
     }
 
     function genCorrect() {
@@ -136,15 +210,17 @@
 
     function reset() {
       for (var i = 0; i < 81; i++) {
-        myApp.data[i] = [0, []];
+        myApp.data[i] = [0, [1,2,3,4,5,6,7,8,9]];
       }
+      document.getElementById('info').innerHTML = '';
+
       updateDisplay();
     }
 
     function randomFill () {
       reset();
       for (var i = 0; i < 81; i++) {
-        if (Math.random() < .25) {
+        if (Math.random() < .85) {
           var r = Math.floor(Math.random()*10);
           myApp.data[i][0] = (isValid(i, r) ? r : 0);
         } else {
@@ -152,23 +228,42 @@
 
         };
       };
+      
       genPossibilities();
       updateDisplay();
+    }
+
+    function basicCheck() {
+      var t = 0;
+      for (var i = 0; i < 81; i++) {
+        if (myApp.data[i][0] == 0 && myApp.data[i][1].length == 1) {
+          var n = myApp.data[i][1][0];
+          myApp.data[i] = [n, []];
+          t++;
+          genPossibilities();
+        }
+      }
+      updateDisplay();
+      return t;
     }
 
     function updateDisplay () {
       for (var i = 0; i < 81; i++) {
         var myInp = document.getElementById("inp" + i);
         if (myInp) {
-          myInp.value = (myApp.data[i][0]? myApp.data[i][0] : '');
-          myInp.title = (myApp.data[i][1]? myApp.data[i][1].toString() : "");
+          myInp.value = (myApp.data[i][0] ? myApp.data[i][0] : '');
+          myInp.title = (myApp.data[i][1] ? myApp.data[i][1].toString() : "");
         }
       };
     }
 
 
     function solvePuzzle () {
-      alert('not implemented')
+      while (validatePuzzle() == 1) {
+        if (basicCheck() == false)
+          break;
+      }
+      return validatePuzzle();
     }
 
   </script>
@@ -235,7 +330,8 @@
   <br>
   <div id="game" class="game"></div>
   
-  <div style="font-size:14px">
+  <!--
+  <div style="font-size:14px">*/
     <h4 style="margin: 0px; margin-top:10px">Example:</h4>
     <p>
       123  789  456<br>
@@ -251,5 +347,6 @@
       978  645  312<br>
     </p>
   </div>
+  -->
 </body>
 </html>
