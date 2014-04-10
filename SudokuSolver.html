@@ -13,14 +13,6 @@
     myApp.data = [];
     randomFill();
 
-    var h = 56;
-    for (var i = 0; i < 9; i++) {
-      var a = Math.floor(h/27)*27 + Math.floor(i/3)*9  +  Math.floor((h%9)/3)*3 + (i%3);
-
-      console.log(a, myApp.data[a][0], isValid(h, 1));
-      // console.log(i+1, isValid(h, i+1));
-    }
-
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
       var gameDiv = document.getElementById("game");
@@ -57,7 +49,6 @@
       var index = parseInt(event.srcElement.id.replace("inp",""));
       var v = parseInt(event.srcElement.value);
       
-      console.log(index + "\t" + v);
       if (v) {
         myApp.data[index] = [v, []];
       } else {
@@ -90,19 +81,57 @@
           }
           
         }
-        console.log(i + " - " + myApp.data[i][1]);
 
       }
     }
 
-    function validatePuzzle () {
-      var isValid = false;
 
+    function validatePuzzle () {
+      // Determines if the puzzle works. All 9 numbers are used 9 times and no two number are in the same row, column or box
+
+      var isValid = true;
+
+      var nums = [0,0,0,0,0,0,0,0,0];
+      for (var i = 0; i < 81; i++) {
+        nums[myApp.data[i][0]-1] += 1;
+      }
       for (var i = 0; i < 9; i++) {
-        
+        if (nums[i] != 9)
+          isValid = false;
       }
 
+      var gTotal = 0;
+      for (var i = 0; i < 9; i++) {
+        var rTotal = 0, cTotal = 0, bTotal = 0;
+
+        for (var j = 0; j < 9; j++) {
+          gTotal += myApp.data[i*9 + j][0];
+
+          rTotal += myApp.data[i*9 + j][0];
+          cTotal += myApp.data[i + j*9][0]; 
+          bTotal += myApp.data[Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3)][0];
+        }
+        if (rTotal != 45 || cTotal != 45 || bTotal != 45) {// 45 = sum([1,2,3,4,5,6,7,8,9])
+          isValid = false;
+        }
+
+      }
+      if (gTotal != 405) // 405 = 45*9 
+        isValid = false;
+      
       document.getElementById('info').innerHTML = (isValid? 'Works!' : 'Does not work!');
+    }
+
+    function genCorrect() {
+      console.log("generating correct grid...");
+      reset();
+      for (var i = 0; i < 9; i++) {
+        for (var j = 0; j < 9; j++) {
+          myApp.data[i*9 + j] = [((i*3 + Math.floor(i/3) + j) % 9) + 1, []];
+          
+        }
+      }
+      updateDisplay();
     }
 
     function reset() {
@@ -128,7 +157,6 @@
     }
 
     function updateDisplay () {
-      console.log('--');
       for (var i = 0; i < 81; i++) {
         var myInp = document.getElementById("inp" + i);
         if (myInp) {
@@ -200,7 +228,7 @@
   <div id="controls" class="controls">
     <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
     <button id="validateButton" onClick="validatePuzzle();">Validate</button>
-    <button id="generateButton" onClick="randomFill();">generate</button>
+    <button id="randomFillButton" onClick="randomFill();">generate</button>
     <p id="info"></p>
   </div>
 
