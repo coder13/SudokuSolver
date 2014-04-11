@@ -87,7 +87,6 @@
       // console.log(event);
       var index = parseInt(event.srcElement.id.replace("inp",""));
       var v = parseInt(event.srcElement.value);
-      console.log(v);
       
       if (v) {
         myApp.data[index] = [v, []];
@@ -217,27 +216,37 @@
     function reset() {
       for (var i = 0; i < 81; i++) {
         myApp.data[i] = [0, []];
-        document.getElementById('inp' + i).style.backgroundColor = 'white';
+        document.getElementById("inp" + i).style.backgroundColor = '#fffff';
       }
       document.getElementById('info').innerHTML = '';
-
+      genPossibilities();
       updateDisplay();
     }
 
-    function randomFill () {
+    function randomFill (density) {
       reset();
-      for (var i = 0; i < 81; i++) {
-        if (Math.random() < 1) {
-          var r = Math.floor(Math.random()*10);
-          myApp.data[i][0] = (isValid(i, r) ? r : 0);
-        } else {
-          myApp.data[i][0] = 0;
+      var valid = 4;
+      while (valid >= 2) {
 
+        for (var i = 0; i < 81; i++) {
+          var c = 0;
+          if (Math.random() < density) {
+            var r = Math.floor(Math.random()*10);
+            while (!isValid(i, r) && c < 9) {
+              r = Math.floor(Math.random()*10);
+              c++;
+            }
+            myApp.data[i][0] = r;
+          } else {
+            myApp.data[i][0] = 0;
+
+          };
         };
-      };
+        genPossibilities();
+        valid = validatePuzzle();
+      }
 
       genPossibilities();
-      validatePuzzle();
       updateDisplay();
     }
 
@@ -261,11 +270,14 @@
         if (inp) {
           inp.value = (myApp.data[i][0] ? myApp.data[i][0] : '');
           inp.title = (myApp.data[i][1] ? myApp.data[i][1].toString() : "");
+
           if (myApp.data[i][0] == 0) {
             if (myApp.data[i][1].length == 0) {
               inp.style.backgroundColor = "#ff0000";
             } else if (myApp.data[i][1].length == 1) {
               inp.style.backgroundColor = "#00ff00";
+            } else {
+              inp.style.backgroundColor = "white";
             }
           
           } else {
@@ -341,7 +353,8 @@
   <div id="controls" class="controls">
     <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
     <button id="validateButton" onClick="validatePuzzle();">Validate</button>
-    <button id="randomFillButton" onClick="randomFill();">generate</button>
+    <button id="randomFillButton" onClick="randomFill(.4);">Generate</button>
+    <button id="clearButton" onClick="reset();">Clear</button>
     <p id="info"></p>
   </div>
 
