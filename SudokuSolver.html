@@ -124,6 +124,7 @@
         }
 
       }
+
     }
 
     function hasDuplicates (array) {
@@ -140,9 +141,13 @@
       // Checks if a cell has 0 possibilities
       for (var i = 0; i < 81; i++) {
         if (myApp.data[i][0] == 0 && myApp.data[i][1] == 0) {
-          document.getElementById('info').innerHTML = 'A cell has zero genPossibilities';
-          return 2;
+          isValid = 4;
         }
+      }
+
+      if (isValid == 4) {
+        document.getElementById('info').innerHTML = 'A cell has zero possibilities';
+        return 4;
       }
 
       // Checks if all 9 numbers have been used
@@ -165,7 +170,7 @@
         }
       }
 
-      if (_.compact(myApp.data) != 81) {
+      if (_.compact(myApp.data).length != 81) {
         document.getElementById('info').innerHTML = messages[1];
         return 1;
       }
@@ -205,12 +210,14 @@
           
         }
       }
+
       updateDisplay();
     }
 
     function reset() {
       for (var i = 0; i < 81; i++) {
-        myApp.data[i] = [0, [1,2,3,4,5,6,7,8,9]];
+        myApp.data[i] = [0, []];
+        document.getElementById('inp' + i).style.backgroundColor = 'white';
       }
       document.getElementById('info').innerHTML = '';
 
@@ -220,7 +227,7 @@
     function randomFill () {
       reset();
       for (var i = 0; i < 81; i++) {
-        if (Math.random() < .85) {
+        if (Math.random() < 1) {
           var r = Math.floor(Math.random()*10);
           myApp.data[i][0] = (isValid(i, r) ? r : 0);
         } else {
@@ -228,8 +235,9 @@
 
         };
       };
-      
+
       genPossibilities();
+      validatePuzzle();
       updateDisplay();
     }
 
@@ -245,16 +253,26 @@
       }
       updateDisplay();
       return t;
-    }
+    } 
 
     function updateDisplay () {
       for (var i = 0; i < 81; i++) {
-        var myInp = document.getElementById("inp" + i);
-        if (myInp) {
-          myInp.value = (myApp.data[i][0] ? myApp.data[i][0] : '');
-          myInp.title = (myApp.data[i][1] ? myApp.data[i][1].toString() : "");
+        var inp = document.getElementById("inp" + i);
+        if (inp) {
+          inp.value = (myApp.data[i][0] ? myApp.data[i][0] : '');
+          inp.title = (myApp.data[i][1] ? myApp.data[i][1].toString() : "");
+          if (myApp.data[i][0] == 0) {
+            if (myApp.data[i][1].length == 0) {
+              inp.style.backgroundColor = "#ff0000";
+            } else if (myApp.data[i][1].length == 1) {
+              inp.style.backgroundColor = "#00ff00";
+            }
+          
+          } else {
+            inp.style.backgroundColor = 'white';
+          }
         }
-      };
+      }
     }
 
 
