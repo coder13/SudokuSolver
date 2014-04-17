@@ -111,6 +111,10 @@
     }
 
 
+    function updateStatus(str) {
+      document.getElementById('info').innerHTML = str;
+    }
+
     function puzzleChanged (event) {
       // console.log(event);
       var index = parseInt(event.srcElement.id.replace("inp",""));
@@ -121,6 +125,8 @@
       } else {
         myApp.data[index] = [0, []];
       };
+
+      updateStatus('');
 
       genPossibilities();
       updateDisplay();
@@ -170,8 +176,28 @@
       }
 
       if (isValid == 4) {
-        document.getElementById('info').innerHTML = 'A cell has zero possibilities';
+        updateStatus("A cell has zero possibilities");
         return 4;
+      }
+
+      for (var i = 0; i < 9; i++) {
+        var v = _.compact(valuesFromIndicies(getRow(i)));
+        if (_.union(v).length != v.length) {
+          updateStatus("A number has been used too many times in a row!");
+          return 2;
+        }
+        
+        v = _.compact(valuesFromIndicies(getColumn(i)));
+        if (_.union(v).length != v.length) {
+          updateStatus("A number has been used too many times in a column!");
+          return 2;
+        }
+        
+        v = _.compact(valuesFromIndicies(getBlock(i)));
+        if (_.union(v).length != v.length) {
+          updateStatus("A number has been used too many times in a block!");
+          return 2;
+        }
       }
 
       // Checks if all 9 numbers have been used
@@ -180,26 +206,26 @@
         nums[myApp.data[i][0]] += 1;
         
       if (nums[0] > 64) {
-          document.getElementById('info').innerHTML = "Not enough clues";
+          updateStatus("Not enough clues");
         return 1;
       }
       for (var i = 1; i < 10; i++) {
-        if (nums[i] < 9) {
-          document.getElementById('info').innerHTML = messages[1];
-          return 1;
-        } else if (nums[i] > 9) {
-          document.getElementById('info').innerHTML = "A number has been used too many times!";
+        if (nums[i] > 9) {
+          updateStatus("A number has been used too many times!");
           return 2;
-        }
+        } else if (nums[i] < 9) {
+          updateStatus(messages[1]);
+          return 1;
+        } 
 
         if (hasDuplicates(getRow(i)) || hasDuplicates(getColumn(i)) || hasDuplicates(getBlock(i))) {
-          document.getElementById('info').innerHTML = 'Has duplicates!';
+          updateStatus("Has duplicates!");
           return 2;
         }
       }
 
       if (_.compact(myApp.data).length != 81) {
-        document.getElementById('info').innerHTML = messages[1];
+        updateStatus(messages[1]);
         return 1;
       }
 
@@ -217,7 +243,7 @@
           bTotal += myApp.data[Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3)][0];
         }
         if (rTotal != 45 || cTotal != 45 || bTotal != 45) { // 45 = sum([1,2,3,4,5,6,7,8,9])
-          document.getElementById('info').innerHTML = messages[2];
+          updateStatus(messages[2]);
           return 2;
         }
 
@@ -225,7 +251,7 @@
       if (gTotal != 405) // 405 = 45*9 
         isValid = 2;
         
-      document.getElementById('info').innerHTML = messages[isValid];
+      updateStatus(messages[isValid]);
       return isValid;
     }
 
@@ -341,9 +367,11 @@
         if (_.indexOf(fp, v) == _.lastIndexOf(fp, v)) {
           for (var j = 0; j < 9; j++) {
             if (p[j].indexOf(v) != -1) {
-              myApp.data[get(index)[j]] = [v, []];
-              count++;
-              return;
+              if (isValid(get(index)[j], v)) {
+                myApp.data[get(index)[j]] = [v, []];
+                count++;
+                return count;
+              }
             }
           }
         }
@@ -353,21 +381,29 @@
     }
 
     function solvePuzzle () {
-      var c; 
-      s:while (validatePuzzle() == 1) {
-        c = 0
+      var c=0; 
+      l:while (validatePuzzle()==1) {
+        c = 0;
         genPossibilities();
         while (basicCheck()) {};       
         for (var i = 0; i < 9; i++) {
-          c+=lessBasicCheck(getRow, i);
-          c+=lessBasicCheck(getColumn, i);
-          c+=lessBasicCheck(getBlock, i);
+          if (lessBasicCheck(getRow, i)) {
+            c++;
+            break l;
+          }
+          if (lessBasicCheck(getColumn, i)) {
+            c++;
+            break l;
+          }
+          if (lessBasicCheck(getBlock, i)) {
+            c++;
+            break l;
+          }
         }
-        updateDisplay();
         if (!c)
-          break;
-        
+          break l;
       }
+
       updateDisplay();
       return validatePuzzle();
     }
