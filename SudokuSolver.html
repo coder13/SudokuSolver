@@ -5,11 +5,14 @@
   
   <title>Sodoku Solver</title>
   <script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
+  <script type="text/javascript" src="http://davidbau.com/encode/seedrandom.js"></script>
+
   <script type="text/javascript">
 
     // Initialize some state
     var myApp = {};
 
+    // 0.01639;
     myApp.data = [[0,[]], [0,[]], [6,[]],   [0,[]], [0,[]], [0,[]],   [4,[]], [3,[]], [9,[]], 
                   [0,[]], [8,[]], [0,[]],   [0,[]], [0,[]], [1,[]],   [7,[]], [2,[]], [0,[]], 
                   [3,[]], [4,[]], [7,[]],   [2,[]], [0,[]], [0,[]],   [0,[]], [0,[]], [8,[]], 
@@ -22,12 +25,15 @@
                   [0,[]], [9,[]], [3,[]],   [6,[]], [0,[]], [0,[]],   [0,[]], [7,[]], [0,[]], 
                   [5,[]], [7,[]], [1,[]],   [0,[]], [0,[]], [0,[]],   [8,[]], [0,[]], [0,[]]];
 
-                  genPossibilities();
-                  updateDisplay();
-    // randomFill();
     
+    var seed = Math.floor(Math.random()*100000);
+
+    var messages = ['Works!', 'Incomplete', 'Invalid', ''];
+
+
     //Wait till the page is loaded to mess with the html
     document.addEventListener('DOMContentLoaded', function() {
+
       var gameDiv = document.getElementById("game");
       gameDiv.innerHTML = '';
       
@@ -55,29 +61,51 @@
 
         gameDiv.appendChild(box);
       };
+
+      randomFillFromSeed(.4, seed);
     });
 
 
+
+    function valuesFromIndicies(indicies) {
+      var values = [];
+      indicies.forEach(function (i) {
+        values.push(myApp.data[i][0]);
+      });
+      return values;
+    }
+    
+    function possibilitiesFromIndicies(indicies) {
+      var possibilities = [];
+      indicies.forEach(function (i) {
+        possibilities.push(myApp.data[i][1]);
+      });
+      return possibilities;
+    }
+
+    // returns an array of indicies
     function getRow(y) {
       var row = [];
       for (var x = 0; x < 9; x++) {
-        row.push(myApp.data[y*9+x]);
+        row.push(y*9+x);
       }
       return row;
     }
 
+    // returns an array of indicies
     function getColumn(x) {
       var column = [];
       for (var y = 0; y < 9; y++) {
-        column.push(myApp.data[y*9+x]);
+        column.push(y*9+x);
       } 
       return column;
     }
 
+    // returns an array of indicies
     function getBlock(i) {
       var block = [];
-      for (var j = 0; j < 0; j++) {
-        block.push(myApp.data[Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3)][0]);
+      for (var j = 0; j < 9; j++) {
+        block.push(Math.floor(i/3)*27 + Math.floor(j/3)*9 + (i%3)*3 + (j%3));
       }
       return block;
     }
@@ -98,6 +126,7 @@
       updateDisplay();
     }
 
+
     function isValid(index, n) {
       for (var i = 0; i < 9; i++) {
         if (myApp.data[Math.floor(index/9)*9 + i][0] == n || myApp.data[(index%9) + i*9][0] == n || // Row & Column
@@ -107,7 +136,6 @@
       }
       return true;
     }
-
 
     function genPossibilities () {
       for (var i = 0; i < 81; i++) {
@@ -130,11 +158,8 @@
       return (array.length != _.uniq(array).length);
     }
 
-    var messages = ['Works!', 'Incomplete', 'Invalid', ''];
     
     function validatePuzzle () {
-      // Determines if the puzzle works. All 9 numbers are used 9 times and no two number are in the same row, column or box
-
       var isValid = 0;
 
       // Checks if a cell has 0 possibilities
@@ -150,11 +175,15 @@
       }
 
       // Checks if all 9 numbers have been used
-      var nums = [0,0,0,0,0,0,0,0,0];
+      var nums = [0,0,0,0,0,0,0,0,0,0];
       for (var i = 0; i < 81; i++)
-        nums[myApp.data[i][0]-1] += 1;
+        nums[myApp.data[i][0]] += 1;
         
-      for (var i = 0; i < 9; i++) {
+      if (nums[0] > 64) {
+          document.getElementById('info').innerHTML = "Not enough clues";
+        return 1;
+      }
+      for (var i = 1; i < 10; i++) {
         if (nums[i] < 9) {
           document.getElementById('info').innerHTML = messages[1];
           return 1;
@@ -202,7 +231,7 @@
 
     function genCorrect() {
       console.log("generating correct grid...");
-      reset();
+      reset();http://davidbau.com/encode/seedrandom.js
       for (var i = 0; i < 9; i++) {
         for (var j = 0; j < 9; j++) {
           myApp.data[i*9 + j] = [((i*3 + Math.floor(i/3) + j) % 9) + 1, []];
@@ -216,32 +245,41 @@
     function reset() {
       for (var i = 0; i < 81; i++) {
         myApp.data[i] = [0, []];
-        document.getElementById("inp" + i).style.backgroundColor = '#fffff';
+        var inp = document.getElementById("inp" + i);
+        if (inp)
+          inp.style.backgroundColor = '#fffff';
       }
       document.getElementById('info').innerHTML = '';
+      seed = 0;
       genPossibilities();
       updateDisplay();
     }
 
-    function randomFill (density) {
+    function randomFillFromSeed(density, s) {
       reset();
+      seed = s;
+      var rng = new Math.seedrandom(s);
+
       var valid = 4;
       while (valid >= 2) {
 
-        for (var i = 0; i < 81; i++) {
+        o:for (var i = 0; i < 81; i++) {
           var c = 0;
-          if (Math.random() < density) {
-            var r = Math.floor(Math.random()*10);
-            while (!isValid(i, r) && c < 9) {
-              r = Math.floor(Math.random()*10);
+          if (rng() < density) {
+            var r = Math.floor(rng()*10);
+            while (!isValid(i, r)) {
+              r = Math.floor(rng()*10);
               c++;
+              if (c > 9)
+                continue o;
             }
-            myApp.data[i][0] = r;
+            if (isValid(i, r))
+              myApp.data[i] = [r,[]];
           } else {
             myApp.data[i][0] = 0;
 
-          };
-        };
+          }
+        }
         genPossibilities();
         valid = validatePuzzle();
       }
@@ -250,19 +288,10 @@
       updateDisplay();
     }
 
-    function basicCheck() {
-      var t = 0;
-      for (var i = 0; i < 81; i++) {
-        if (myApp.data[i][0] == 0 && myApp.data[i][1].length == 1) {
-          var n = myApp.data[i][1][0];
-          myApp.data[i] = [n, []];
-          t++;
-          genPossibilities();
-        }
-      }
-      updateDisplay();
-      return t;
-    } 
+    function randomFill(density) {
+      randomFillFromSeed(density, Math.floor(Math.random()*100000));
+    }
+
 
     function updateDisplay () {
       for (var i = 0; i < 81; i++) {
@@ -285,14 +314,61 @@
           }
         }
       }
+
+      document.getElementById('seed').innerHTML = 'Seed: ' + seed;
     }
 
+    function basicCheck() {
+      var count = 0;
+      for (var i = 0; i < 81; i++) {
+        if (myApp.data[i][0] == 0 && myApp.data[i][1].length == 1) {
+          var n = myApp.data[i][1][0];
+          myApp.data[i] = [n, []];
+          count++;
+          genPossibilities();
+        }
+      }
+      return count;
+    } 
+
+    function lessBasicCheck(get, index) {
+      var count = 0;
+      var p  = possibilitiesFromIndicies(get(index));
+      var fp = _.flatten(_.compact(p));
+      o:for (var i = 0; i < _.union(fp).length; i++) {
+        var v = _.union(fp)[i];
+
+        if (_.indexOf(fp, v) == _.lastIndexOf(fp, v)) {
+          for (var j = 0; j < 9; j++) {
+            if (p[j].indexOf(v) != -1) {
+              myApp.data[get(index)[j]] = [v, []];
+              count++;
+              return;
+            }
+          }
+        }
+
+      }
+      return count;
+    }
 
     function solvePuzzle () {
-      while (validatePuzzle() == 1) {
-        if (basicCheck() == false)
+      var c; 
+      s:while (validatePuzzle() == 1) {
+        c = 0
+        genPossibilities();
+        while (basicCheck()) {};       
+        for (var i = 0; i < 9; i++) {
+          c+=lessBasicCheck(getRow, i);
+          c+=lessBasicCheck(getColumn, i);
+          c+=lessBasicCheck(getBlock, i);
+        }
+        updateDisplay();
+        if (!c)
           break;
+        
       }
+      updateDisplay();
       return validatePuzzle();
     }
 
@@ -351,9 +427,9 @@
   <h2>The Game:</h2>
   
   <div id="controls" class="controls">
-    <button id="SolveButton" onClick="solvePuzzle();">Solve</button>
+    <button id="solveButton" onClick="solvePuzzle()">Solve</button>
     <button id="validateButton" onClick="validatePuzzle();">Validate</button>
-    <button id="randomFillButton" onClick="randomFill(.4);">Generate</button>
+    <button id="generateButton" onClick="randomFill(.5);">Generate</button>
     <button id="clearButton" onClick="reset();">Clear</button>
     <p id="info"></p>
   </div>
@@ -361,6 +437,8 @@
   <br>
   <div id="game" class="game"></div>
   
+  <p id='seed' style='margin: 0px; margin-left: 8px; clear:both'>Seed: </p>
+
   <!--
   <div style="font-size:14px">*/
     <h4 style="margin: 0px; margin-top:10px">Example:</h4>
