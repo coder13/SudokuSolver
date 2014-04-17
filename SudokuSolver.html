@@ -62,7 +62,7 @@
         gameDiv.appendChild(box);
       };
 
-      randomFillFromSeed(.4, seed);
+      randomFill(.4, seed);
     });
 
 
@@ -281,10 +281,13 @@
       updateDisplay();
     }
 
-    function randomFillFromSeed(density, s) {
+    function randomFill(density, s) {
       reset();
-      seed = s;
-      var rng = new Math.seedrandom(s);
+      if (s)
+        seed = s;
+      else 
+        seed = Math.floor(Math.random()*100000)
+      var rng = new Math.seedrandom(seed);
 
       var valid = 4;
       while (valid >= 2) {
@@ -312,10 +315,6 @@
 
       genPossibilities();
       updateDisplay();
-    }
-
-    function randomFill(density) {
-      randomFillFromSeed(density, Math.floor(Math.random()*100000));
     }
 
 
